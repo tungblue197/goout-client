@@ -21,19 +21,23 @@ export default Home
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const isLogin = protectPage(ctx);
   if (!isLogin) {
-      return {
-          redirect: {
-              permanent: false,
-              destination: "/auth",
-          },
-          props: {
+    return {
+      redirect: {
+        permanent: false,
+        destination: "/auth",
+      },
+      props: {
 
-          }
       }
+    }
   }
   return {
+    redirect: {
+      permanent: false,
+      destination: "/session/create",
+    },
     props: {
-      
+
     }
   }
 }
