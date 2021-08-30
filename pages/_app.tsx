@@ -7,6 +7,7 @@ import { CookiesProvider } from 'react-cookie';
 import React from 'react'
 import { Router, useRouter } from 'next/router'
 import NProgress from 'nprogress';
+import Loading from 'components/loading'
 
 NProgress.configure({ showSpinner: true });
 
@@ -28,7 +29,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   console.log(pageLoading, 'pageLoading');
   return <>
-    { pageLoading ? <h1>Page loading</h1> : null}
+    { pageLoading ? <Loading /> : null}
     <CookiesProvider>
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools />
