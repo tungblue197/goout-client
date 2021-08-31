@@ -3,7 +3,7 @@ import { modalStyle } from 'consts/modal';
 import MainLayout from 'layouts/MainLayout'
 import { GetServerSidePropsContext, InferGetServerSidePropsType, GetStaticPaths } from 'next'
 import { useRouter } from 'next/dist/client/router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useEffect } from 'react';
 import { getSessions, getSesssionById } from 'services/session';
 import { Location, Session, User } from 'types/global';
@@ -16,6 +16,7 @@ import { store } from 'react-notifications-component';
 import { protectPage } from 'helpers/auth';
 import { useBeforeunload} from 'react-beforeunload';
 import Image from 'next/image';
+import { app_domain, server_domain } from 'consts/domain';
 
 
 var connectionOptions = {
@@ -32,10 +33,10 @@ export default function SessionById({
     const router = useRouter();
     const [showMap, setShowMap] = useState(false);
     const [locations, setLocations] = useState<Location[]>();
-    const [pickLocation, setPickLocation] = useState<Location>();
-    const [currentViewLocation, setCurrentViewLocation] = useState<Location>();
     const [usersOnline, setUserOnline] = useState<User[]>([]);
+    const [currentVotes, setCurrentVotes] = useState<{ uId: string,  lId: string}[]>();
     const [timer, setTimer] = useState<number>();
+    const [currentPick, setCurrentPick] = useState<string>();
     const socketRef = useRef<Socket>();
     const [cookies] = useCookies();
     useEffect(() => {
@@ -44,12 +45,21 @@ export default function SessionById({
         sessionCountDown();
     }, []);
     const socketConnect = () => {
-        socketRef.current = io(process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:5000')
+        socketRef.current = io(server_domain || 'http://localhost:5000')
     }
 
     useBeforeunload(e => {
         leaveSession();
     })
+
+    const getNumberOfOccurrences = useCallback((lId: string) => {
+       if(!currentVotes?.length) return 0;
+       let n = 0;
+       currentVotes?.forEach(v => {
+           if(v.lId === lId) n++;
+       })
+       return n;
+    }, [currentVotes]);
 
     const joinSession = () => {
         const socket = socketRef.current;
@@ -64,7 +74,6 @@ export default function SessionById({
             });
 
             socket.on('user-joined-session', (e: any) => {
-                
                 setUserOnline(e.room.users);
                 store.addNotification({
                     title: 'Thông báo',
@@ -78,6 +87,16 @@ export default function SessionById({
                         duration: 2000,
                     }
                 })
+            });
+
+            socket.on('user-voted', (votes) => {
+                setCurrentVotes(votes);
+            })
+
+            socket.on('vote-done', (e) => {
+                if(session?.id){
+                    router.push(session.id);
+                }
             })
         }
     }
@@ -85,7 +104,7 @@ export default function SessionById({
     const sessionCountDown = () => {
         const socket = socketRef.current;
         if (socket) {
-            socket.on('count', (n) => {
+            socket.on('countdown', (n) => {
                 setTimer(n);
             })
         }
@@ -102,6 +121,19 @@ export default function SessionById({
             socket.emit('user-leave-room', { user: _user, sId: session?.id});
         }
     }
+
+    const voteLocation = (loc: Location) => {
+        const socket = socketRef.current;
+        setCurrentPick(loc.id);
+        if(socket){
+            const user:User = { 
+                id: cookies.uid,
+                name: cookies.displayName,
+            }
+            socket.emit('user-vote', { user, sId: session!.id,  location: loc });
+        }
+    }
+
 
     return (
         <MainLayout>
@@ -150,23 +182,25 @@ export default function SessionById({
                 </div>
                 <div className="flex-1 py-2">
                     <div className="text-center">
-                        <h3 className="text-4xl text-red-400">{timer !== undefined ? timer: null}</h3>
-                        <span className="block text-sm text-purple-500">Chọn địa điểm bạn muốn đến</span>
+                        <h3 className="text-4xl text-red-400">{timer === 1 || !timer ? null : timer}</h3>
+                        <span className="block text-sm text-purple-500 mb-4">Chọn địa điểm bạn muốn đến</span>
                     </div>
                     <div className="flex flex-col">
                         {
                             !!plocations && plocations.map(loc => {
                                 return (
-                                    <div key={loc.rid} className="w-full border px-2 py-1 md:ml-1 cursor-pointer flex items-center mb-2">
-                                        {/* <i className="fas fa-map-marker text-sm text-red-400 mr-2"></i> */}
-                                        <span className="text-sm text-red-400 block flex-1">{loc.name}</span>
+                                    <div key={loc.rid} className={`w-full border px-2 py-1 md:ml-1 cursor-pointer flex items-center mb-2 ${currentPick === loc.id ? 'bg-purple-300': 'bg-white'}`}>
+                                        <span className={`text-sm ${currentPick === loc.id ? 'text-purple-50':'text-red-400'} block flex-1 `}>{loc.name}</span>
+                                        <span className='text-purple-500'>{getNumberOfOccurrences(loc.id)} - Votes</span>
                                         <button onClick={e => {
                                             setLocations([loc]);
                                             setShowMap(true);
-                                        }} className="text-purple-400 mx-2 text-sm border py-1 px-2 rounded shadow">
+                                        }} className="text-purple-400 mx-2 text-sm border py-1 px-2 rounded shadow bg-white">
                                             Xem trên map
                                         </button>
-                                        <button className="text-green-400 mx-2 text-sm border py-1 px-2 rounded shadow">
+                                        <button onClick={e => {
+                                            voteLocation(loc);
+                                        }} className="text-green-400 mx-2 text-sm border py-1 px-2 rounded shadow bg-white">
                                             Chọn
                                         </button>
                                     </div>
@@ -188,7 +222,8 @@ export default function SessionById({
 
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
-    console.log(process.env.NEXT_PUBLIC_APP_DOMAIN, '----');
+    const appDomain = app_domain;
+
     const isLogin = protectPage(ctx);
     if (!isLogin) {
         return {
@@ -202,11 +237,11 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
         }
     }
     const { id } = ctx.params as { id: string };
-    const { data } = await axios.get(process.env.NEXT_PUBLIC_APP_DOMAIN + '/api/session/' + id);
+    const { data } = await axios.get(appDomain + '/api/session/' + id);
     const { createdBy } = data.value as Session;
-    const userResult = await axios.get(process.env.NEXT_PUBLIC_APP_DOMAIN + '/api/user/' + createdBy);
+    const userResult = await axios.get(appDomain + '/api/user/' + createdBy);
     const { name, locationId, photoURL } = userResult.data.value as User;
-    const lsResult = await axios.post(process.env.NEXT_PUBLIC_APP_DOMAIN + '/api/location/location_by_session', { sessionId: data.value.id });
+    const lsResult = await axios.post(appDomain + '/api/location/location_by_session', { sessionId: data.value.id });
 
     return {
         props: {

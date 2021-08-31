@@ -146,6 +146,7 @@ export default function AuthPage({
 }
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+    
     const isLogin = protectPage(ctx);
     if (isLogin) return {
         redirect: {

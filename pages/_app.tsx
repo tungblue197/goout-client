@@ -27,9 +27,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     router.events.on('routeChangeError', handleComplete);
   }, [router]);
 
-  console.log(pageLoading, 'pageLoading');
   return <>
-    { pageLoading ? <Loading /> : null}
+    { pageLoading && <Loading />}
     <CookiesProvider>
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools />

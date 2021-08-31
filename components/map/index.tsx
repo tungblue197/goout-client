@@ -8,6 +8,8 @@ import { useRef } from 'react';
 import { m2km } from 'helpers/math';
 import { useCookies } from 'react-cookie';
 import { v4 as uuidv4 } from 'uuid';
+import { faMapMarkedAlt,faTimes } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 const defaultViewPort = {
     latitude: 21.028511,
@@ -68,7 +70,7 @@ const Map: React.FC<IMapProps> = ({ _pickedLocations, onLocationsChanged, onMapC
             setListLocations([]);
             return;
         }
-        const url = `${process.env.NEXT_PUBLIC_API_MAPBOX}/${text}.json?proximity=105.777909,21.028412&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${text}.json?proximity=105.777909,21.028412&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
         axios.get(url).then(({ data }) => {
             const _list = data.features.map((loc: any) => {
                 const location: Location = {
@@ -104,7 +106,7 @@ const Map: React.FC<IMapProps> = ({ _pickedLocations, onLocationsChanged, onMapC
     }
 
     const calculateRoute = (lMe: { longitude: number, latitude: number }, lNe: Location) => {
-        axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${lMe.longitude}%2C${lMe.latitude}%3B${lNe.longitude}%2C${lNe.latitude}?alternatives=true&geometries=geojson&steps=true&access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`)
+        axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${lMe.longitude}%2C${lMe.latitude}%3B${lNe.longitude}%2C${lNe.latitude}?alternatives=true&geometries=geojson&steps=true&access_token=pk.eyJ1IjoidHVuZ3B2OTciLCJhIjoiY2tzb3IzNzE1M3U2bTJ3bzJzdmxpc3VxeCJ9.bWom9lqXVp6IMGcWH0Aw_A`)
             .then(({ data }) => {
                 setCoordinates(data.routes[0].geometry.coordinates);
                 setDistance(+m2km(data.routes[0].distance).toFixed(2));
@@ -125,7 +127,9 @@ const Map: React.FC<IMapProps> = ({ _pickedLocations, onLocationsChanged, onMapC
                     }} className="px-4 w-full py-2 text-sm bg-purple-500 text-purple-50 rounded shadow-sm hover:bg-purple-400">Save <i className="fas fa-save text-white ml-1"></i></button>
                 </div>
                 <div>
-                    <button onClick={e => onMapClose()} className='text-red-500 text-xl cursor-pointer'><i className="fas fa-times"></i></button>
+                    <button onClick={e => onMapClose()} className='text-red-500 text-xl cursor-pointer'>
+                        <FontAwesomeIcon icon={faTimes} className='text-red-500 text-2xl' />
+                    </button>
                 </div>
             </div>
             <div className='flex-1 w-full flex relative'>
@@ -197,7 +201,7 @@ const Map: React.FC<IMapProps> = ({ _pickedLocations, onLocationsChanged, onMapC
                         {
                             pickedLocations.map(({ longitude, latitude, id }: Location) => (
                                 <Marker longitude={longitude} key={id} latitude={latitude}>
-                                    <i className="fas fa-map-marker-alt text-red-500 text-2xl cursor-pointer"></i>
+                                    <FontAwesomeIcon icon={faMapMarkedAlt} className='text-red-500'/>
                                 </Marker>
                             ))
 

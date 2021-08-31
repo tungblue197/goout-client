@@ -12,6 +12,7 @@ type Data = {
 
 
 export default async function handler (req: NextApiRequest, res: NextApiResponse<Data>) {
+    console.log(process.env.NODE_ENV);
     if(req.method === 'POST'){
         const { user, authType } = req.body as { user: User, authType?: 'login' | 'register' };
         if(authType === 'login'){

@@ -142,6 +142,7 @@ export default function CreatePage({
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const isLogin = protectPage(ctx);
+   
     if (!isLogin) {
         return {
             redirect: {
