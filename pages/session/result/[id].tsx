@@ -15,7 +15,7 @@ export default function ResultPage({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
     const [showMap, setShowMap] = useState(false);
     return (
-        <MainLayout>
+        <>
             <div className='w-11/12 md:w-8/12 mx-auto border  my-4 shadow-2xl rounded-xl'>
                 <div className='p-4 space-y-2'>
                     <div className='flex'>
@@ -43,7 +43,7 @@ export default function ResultPage({
             <Modal ariaHideApp={false} style={modalStyle} isOpen={showMap}>
                 <Map onMapClose={() => setShowMap(false)} _pickedLocations={location ? [location] : []} rectFromMe={true} />
             </Modal>
-        </MainLayout>
+        </>
     )
 }
 
@@ -57,7 +57,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
                 destination: "/auth",
             },
             props: {
-
+                
             }
         }
     }
