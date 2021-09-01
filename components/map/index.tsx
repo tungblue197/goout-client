@@ -10,6 +10,7 @@ import { useCookies } from 'react-cookie';
 import { v4 as uuidv4 } from 'uuid';
 import { faMapMarkedAlt,faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import Image from 'next/image';
 
 const defaultViewPort = {
     latitude: 21.028511,
@@ -200,8 +201,8 @@ const Map: React.FC<IMapProps> = ({ _pickedLocations, onLocationsChanged, onMapC
 
                         {
                             pickedLocations.map(({ longitude, latitude, id }: Location) => (
-                                <Marker longitude={longitude} key={id} latitude={latitude}>
-                                    <FontAwesomeIcon icon={faMapMarkedAlt} className='text-red-500'/>
+                                <Marker longitude={longitude} key={id} latitude={latitude} offsetTop={-(viewport.zoom * 3)}>
+                                    <Image src='/assets/images/maker-icon.png' width={viewport.zoom * 3} height={viewport.zoom * 3} />
                                 </Marker>
                             ))
 

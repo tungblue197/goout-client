@@ -14,7 +14,7 @@ import { useRef } from 'react';
 import { useCookies } from 'react-cookie';
 import { store } from 'react-notifications-component';
 import { protectPage } from 'helpers/auth';
-import { useBeforeunload} from 'react-beforeunload';
+import { useBeforeunload } from 'react-beforeunload';
 import Image from 'next/image';
 import { app_domain, server_domain } from 'consts/domain';
 
@@ -34,7 +34,7 @@ export default function SessionById({
     const [showMap, setShowMap] = useState(false);
     const [locations, setLocations] = useState<Location[]>();
     const [usersOnline, setUserOnline] = useState<User[]>([]);
-    const [currentVotes, setCurrentVotes] = useState<{ uId: string,  lId: string}[]>();
+    const [currentVotes, setCurrentVotes] = useState<{ uId: string, lId: string }[]>();
     const [timer, setTimer] = useState<number>();
     const [currentPick, setCurrentPick] = useState<string>();
     const socketRef = useRef<Socket>();
@@ -53,12 +53,12 @@ export default function SessionById({
     })
 
     const getNumberOfOccurrences = useCallback((lId: string) => {
-       if(!currentVotes?.length) return 0;
-       let n = 0;
-       currentVotes?.forEach(v => {
-           if(v.lId === lId) n++;
-       })
-       return n;
+        if (!currentVotes?.length) return 0;
+        let n = 0;
+        currentVotes?.forEach(v => {
+            if (v.lId === lId) n++;
+        })
+        return n;
     }, [currentVotes]);
 
     const joinSession = () => {
@@ -71,22 +71,12 @@ export default function SessionById({
             }
             socket.emit('user-join-session', { user: _user, sId: session?.id }, (e: any) => {
                 setUserOnline(e.room.users);
+                setCurrentVotes(e.room.votes);
             });
 
             socket.on('user-joined-session', (e: any) => {
                 setUserOnline(e.room.users);
-                store.addNotification({
-                    title: 'Thông báo',
-                    insert: 'top',
-                    container: 'top-right',
-                    message: e.user.name + ' was join',
-                    type: 'info',
-                    animationIn: ["animate__animated", "animate__fadeIn"],
-                    animationOut: ["animate__animated", "animate__fadeOut"],
-                    dismiss: {
-                        duration: 2000,
-                    }
-                })
+                console.log(e);
             });
 
             socket.on('user-voted', (votes) => {
@@ -94,7 +84,7 @@ export default function SessionById({
             })
 
             socket.on('vote-done', (e) => {
-                if(session?.id){
+                if (session?.id) {
                     router.push(session.id);
                 }
             })
@@ -118,25 +108,25 @@ export default function SessionById({
                 name: cookies.displayName,
                 photoURL: cookies.photoURL
             }
-            socket.emit('user-leave-room', { user: _user, sId: session?.id});
+            socket.emit('user-leave-room', { user: _user, sId: session?.id });
         }
     }
 
     const voteLocation = (loc: Location) => {
         const socket = socketRef.current;
         setCurrentPick(loc.id);
-        if(socket){
-            const user:User = { 
+        if (socket) {
+            const user: User = {
                 id: cookies.uid,
                 name: cookies.displayName,
             }
-            socket.emit('user-vote', { user, sId: session!.id,  location: loc });
+            socket.emit('user-vote', { user, sId: session!.id, location: loc });
         }
     }
 
 
     return (
-        <MainLayout>
+        <>
             <div className="w-11/12 border mx-auto my-4 shadow-xl bg-white rounded-xl p-2 flex flex-wrap">
                 <div className="w-full md:w-4/12 md:border-r flex-wrap border-b border-gray-300">
                     <div className="w-full border-b border-gray-300  py-4">
@@ -171,7 +161,7 @@ export default function SessionById({
                             {
                                 usersOnline.map(user => (
                                     <li key={user.id} className="flex items-center space-1-x">
-                                        <Image className='rounded-full' src={user.photoURL || '/assets/images/imgbin_computer-icons-avatar-user-login-png.png'} width={40} height={40}  />
+                                        <Image className='rounded-full' src={user.photoURL || '/assets/images/imgbin_computer-icons-avatar-user-login-png.png'} width={40} height={40} />
                                         <span className="text-sm m-2 text-gray-400">{user.name}</span>
                                     </li>
                                 ))
@@ -189,8 +179,8 @@ export default function SessionById({
                         {
                             !!plocations && plocations.map(loc => {
                                 return (
-                                    <div key={loc.rid} className={`w-full border px-2 py-1 md:ml-1 cursor-pointer flex items-center mb-2 ${currentPick === loc.id ? 'bg-purple-300': 'bg-white'}`}>
-                                        <span className={`text-sm ${currentPick === loc.id ? 'text-purple-50':'text-red-400'} block flex-1 `}>{loc.name}</span>
+                                    <div key={loc.rid} className={`w-full border px-2 py-1 md:ml-1 cursor-pointer flex items-center mb-2 ${currentPick === loc.id ? 'bg-purple-300' : 'bg-white'}`}>
+                                        <span className={`text-sm ${currentPick === loc.id ? 'text-purple-50' : 'text-red-400'} block flex-1 `}>{loc.name}</span>
                                         <span className='text-purple-500'>{getNumberOfOccurrences(loc.id)} - Votes</span>
                                         <button onClick={e => {
                                             setLocations([loc]);
@@ -215,7 +205,7 @@ export default function SessionById({
             <Modal ariaHideApp={false} style={modalStyle} isOpen={showMap}>
                 <Map onMapClose={() => setShowMap(false)} _pickedLocations={locations} rectFromMe={true} />
             </Modal>
-        </MainLayout>
+        </>
     )
 }
 

@@ -42,13 +42,14 @@ const MainLayout: React.FC<IMainLayout> = ({ children }) => {
                 <div className="flex justify-end">
                     <div className="w-9 h-9 rounded-full relative" ref={dropdownRef}>
                         <Image className='rounded-full cursor-pointer' onClick={e => {
-                            console.log(e, 'dfsd');
                             setDropdownOpen(!dropdownOpen)
                         }} src={cookies.photoURL || '/assets/images/imgbin_computer-icons-avatar-user-login-png.png'} alt='user avatar' width={60} height={60}/>
                         <div className={`absolute top-10 right-0 w-40 ${!dropdownOpen && 'hidden'}`}>
                             <ul className="flex flex-col shadow-xl border bg-white">
                                 <li onClick={handleLogout} className="px-4 py-2 block border-b border-gray-100 cursor-pointer hover:bg-red-300 hover:text-red-50 text-red-300"><i className="fas fa-sign-out-alt  mr-2 "></i>Đăng xuất</li>
-                                <li className="px-4 py-2 block hover:bg-red-300 hover:text-red-50 text-red-300 cursor-pointer "><i className="fas fa-id-card mr-2"></i>Profile</li>
+                                <li onClick={e => {
+                                    router.push('/user/profile')
+                                }} className="px-4 py-2 block hover:bg-red-300 hover:text-red-50 text-red-300 cursor-pointer "><i className="fas fa-id-card mr-2"></i>Profile</li>
                             </ul>
                         </div>
                     </div>

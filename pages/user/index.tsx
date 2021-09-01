@@ -11,7 +11,9 @@ import { useState } from 'react';
 import { modalStyle } from 'consts/modal';
 import { Location } from 'types/global';
 import http from 'http/http';
-import { useRouter } from 'next/dist/client/router';
+import { useRouter } from 'next/dist/client/router'; 
+import ReactLoading from "react-loading";
+
 
 export default function UserPage({
 
@@ -29,11 +31,11 @@ export default function UserPage({
     const updateUser = (user: User) => {
         return http.put('/user', { user }).then(({ data }) => data);
     }
-    const { mutate } = useMutation(updateUser, {
-        onSuccess: (e,ctx) => {
-            if(locations?.length) {
-                setCookie('log',locations[0].longitude);
-                setCookie('lat',locations[0].latitude);
+    const { mutate, isLoading } = useMutation(updateUser, {
+        onSuccess: (e, ctx) => {
+            if (locations?.length) {
+                setCookie('log', locations[0].longitude);
+                setCookie('lat', locations[0].latitude);
             }
             setCookie('locationId', ctx.locationId);
             setCookie('locationName', ctx.locationName);
@@ -45,22 +47,25 @@ export default function UserPage({
     const handleSubmitUser = (user: User) => {
         const id = cookies.uid;
         user.id = id;
-        if(locations?.length){
+        if (locations?.length) {
             user.locationId = locations[0].id;
             user.locationName = locations[0].name;
         }
         mutate(user);
     }
     return (
-        <MainLayout>
+        <>
             <div className="w-11/12 border mx-auto my-4 shadow-xl bg-white rounded-xl p-2">
                 <div className="flex w-full justify-between items-center">
                     <span className="text-sm text-gray-500 block ml-4 ">Nhập thông tin của bạn</span>
                     <div className="">
                         <button
-                            onClick={handleSubmit(handleSubmitUser)}
-                            className="px-4 w-full py-2 text-sm bg-purple-500 text-purple-50 rounded shadow-sm hover:bg-purple-400"> Tiếp
-                            tục <i className="fas fa-arrow-right ml-1" aria-hidden={'true'}></i></button>
+                            onClick={e => {
+                                if(isLoading) return;
+                                handleSubmit(handleSubmitUser)();
+                            }}
+                            className="px-4 w-full py-2 text-sm bg-purple-500 text-purple-50 rounded shadow-sm hover:bg-purple-400"> {!isLoading ? <span>Tiếp
+                                tục <i className="fas fa-arrow-right ml-1" aria-hidden={'true'}></i></span> : <div className='bg-purple-400'> < ReactLoading color={'#eee'} type='bubbles' width={20} height={20}  /></div>  }  </button>
                     </div>
                 </div>
                 <form action="" className="flex  px-4 my-6 flex-wrap">
@@ -97,7 +102,7 @@ export default function UserPage({
                     clearErrors('locationName');
                 }} />
             </Modal>
-        </MainLayout>
+        </>
     )
 }
 

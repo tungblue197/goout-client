@@ -8,6 +8,7 @@ import React from 'react'
 import { Router, useRouter } from 'next/router'
 import NProgress from 'nprogress';
 import Loading from 'components/loading'
+import MainLayout from 'layouts/MainLayout'
 
 NProgress.configure({ showSpinner: true });
 
@@ -28,11 +29,14 @@ function MyApp({ Component, pageProps }: AppProps) {
   }, [router]);
 
   return <>
-    { pageLoading && <Loading />}
+
     <CookiesProvider>
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools />
-        <Component {...pageProps} />
+        <MainLayout>
+          {pageLoading && <Loading />}
+          <ReactQueryDevtools />
+          <Component {...pageProps} />
+        </MainLayout>
       </QueryClientProvider>
     </CookiesProvider>
   </>

@@ -34,6 +34,18 @@ export default async function handler (req: NextApiRequest, res: NextApiResponse
                 message: 'no data'
             });
         } else if (req.method === 'GET') {
+            const { createdBy } = req.query;
+            if(createdBy){
+                const queryStr = `select * from sessions where "createdBy" = $1`;
+                const result = await pool.query(queryStr, [createdBy]);
+                if(result){
+                    return res.status(200).json({
+                        success: true,
+                        value: result.rows
+                    })
+                }
+
+            }
             const queryStr = `select * from sessions`;
             const result = await pool.query(queryStr);
             if (result) {
@@ -42,6 +54,7 @@ export default async function handler (req: NextApiRequest, res: NextApiResponse
         }
         return res.status(200).json({ success: false, message: 'api not found' })
     } catch (error) {
+        console.log('error : ', error);
         return res.status(500).json({ success: false, message: 'server error'});
     }
 

@@ -12,7 +12,7 @@ import { insertSession } from 'services/session';
 import { useCookies } from 'react-cookie';
 import { insertLocations } from 'services/location';
 import { protectPage } from 'helpers/auth';
-
+import ReactLoading from 'react-loading';
 export default function CreatePage({
 
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
@@ -35,7 +35,7 @@ export default function CreatePage({
 
     const session = useMutation(insertSession, {
         onSettled: ({ value }: any, ctx) => {
-            locationM.mutate({locations,sessionId: value.id});
+            locationM.mutate({ locations, sessionId: value.id });
             router.replace('/session/' + value.id);
         },
     });
@@ -43,7 +43,7 @@ export default function CreatePage({
     const locationM = useMutation(insertLocations);
 
     return (
-        <MainLayout>
+        <>
             <div className="w-11/12 border mx-auto my-4 shadow-xl bg-white rounded-xl p-2">
                 <div className="flex w-full justify-between items-center ">
                     <div>
@@ -60,7 +60,9 @@ export default function CreatePage({
                                 handleSubmit(handleSubmitSession)();
                             }}
                             className="px-4 w-full py-2 text-sm bg-purple-500 text-purple-50 rounded shadow-sm hover:bg-purple-400">
-                            Tạo nhóm <i className="fas fa-plus ml-1"></i></button>
+                            {(session.isLoading && locationM.isLoading) ? <div className='bg-purple-400'> < ReactLoading color={'#eee'} type='bubbles' width={20} height={20} /></div> : <span>
+                                Tạo nhóm</span>}
+                        </button>
                     </div>
                 </div>
                 <form action="" className="px-4 my-6">
@@ -136,13 +138,13 @@ export default function CreatePage({
                     setShowMap(false);
                 }} />
             </Modal>
-        </MainLayout>
+        </>
     )
 }
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const isLogin = protectPage(ctx);
-   
+
     if (!isLogin) {
         return {
             redirect: {
@@ -154,7 +156,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
             }
         }
     }
-    
+
     return {
         props: {
 
